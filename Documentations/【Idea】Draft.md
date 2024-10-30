@@ -20,8 +20,8 @@
 
       - Prompt: Displine and grade? Do you have specific difficuties? Focus Requirements?
       - Input: Natural language describing discipline and grade
-      - Output Formats
-        - visulized general study plan
+      - Output Formats: Design dataformat for knowledge relationship
+        - visulized general study plan (topics + description + relationships)
         - specific study plan 
         - (optional) breakdown steps on specific focus (guidance)
 
@@ -36,12 +36,17 @@
         > What database do we use?  Open-source Dataset, otherwise need to crawl data/textbook
         >
         > Copy-right laws? [ToDo]
+        >
+        > Syallabus
 
       * Agents?
 
-    - Metrics: How to evaluate improvement? [ToDo]
+    - Metrics: How to evaluate improvement? How to evaluate personalization.
 
-    - Interface Framework: Gradio
+    - Interface Framework
+
+      - Web: Gradio
+      - Phone: Pocket pound/phone
 
   - **Plan**
 
@@ -78,7 +83,19 @@
 
   - **<u>Suggestions?</u>**
 
-    - 
+    - Feasible goals within 2 months
+
+    - Existed Market tools for study plan
+
+    - What personal will it be. User profile or questions => evaluation about personalization
+
+      > LLM metrics: what
+
+    - Optimzation on small devices => LLM for education in small devices
+
+* **<u>Reference</u>**
+
+  * Shen Wang, Tianlong Xu, Hang Li, Chaoli Zhang, Joleen Liang, Jiliang Tang, Philip S. Yu, Qingsong Wen. 2024. Large Language Models for Education: A Survey and Outlook.
 
 * **<u>Collaboration</u>**
 
