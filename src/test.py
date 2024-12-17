@@ -2,6 +2,7 @@ import time
 from tqdm import tqdm
 from datasets import load_dataset
 from unsloth import FastLanguageModel
+from torch.utils.data import DataLoader
 
 from utils.formatter import *
 from models.generator import model_generator
@@ -16,7 +17,22 @@ baselines = [
 ds = load_dataset("openai/gsm8k", "main")
 samples = ds["train"]
 test_dataset = ds["test"]
-test_data = test_dataset.take(10)
+
+test_data = test_dataset.take(16)
+"""
+test_data = test_dataset.take(8)
+test_data.set_format(type="torch")
+test_dataloader = DataLoader(test_data, batch_size=2)
+for batch in test_dataloader:
+    messages = nshot_chats_batch(batch, samples, 2)
+    response = get_response(model, tokenizer, messages)
+    pred_answers = [extract_ans_from_response(answer) for answer in response]
+    true_answers = [extract_ans_from_response(answer) for answer in batch['answer']]
+    for i in range(len(pred_answers)):
+        total += 1
+        if pred_answers[i] == true_answers[i]:
+            correct += 1
+"""
 
 # test accuracy for different models
 acc_data = []
