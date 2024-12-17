@@ -18,6 +18,7 @@ def model_generator(model_name, max_seq_length=2048, is_load=False):
             dtype=dtype,
             load_in_4bit=load_in_4bit,
         )
+
     else:
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,

@@ -1,0 +1,2 @@
+unsloth==2024.12.4
+datasets==3.2.0
