@@ -27,11 +27,11 @@ def model_generator(model_name, max_seq_length=2048, is_load=False):
             load_in_4bit=load_in_4bit,
             token=HF_TOKEN,  # use one if using gated models like meta-llama/Llama-2-7b-hf
         )
-        
-        if 'llama' in model_name:
+
+        if "llama" in model_name:
             tokenizer = get_chat_template(
                 tokenizer,
-                chat_template = "llama-3.1",
+                chat_template="llama-3.1",
             )
 
         model = FastLanguageModel.get_peft_model(
