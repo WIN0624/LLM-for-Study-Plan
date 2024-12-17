@@ -7,7 +7,7 @@ from unsloth.chat_templates import get_chat_template
 from unsloth.chat_templates import train_on_responses_only
 
 from models.generator import model_generator
-from utils.data import formatting_prompts_func
+from utils.formatter import formatting_prompts_func
 
 model_name = "unsloth/Llama-3.2-3B-Instruct"
 max_seq_length = 2048  # Choose any! We auto support RoPE Scaling internally!
@@ -59,3 +59,7 @@ trainer = train_on_responses_only(
 )
 
 trainer_stats = trainer.train()  # 480 samples
+
+# save 
+# model.save_pretrained("lora_model")  # Local saving
+# tokenizer.save_pretrained("lora_model")

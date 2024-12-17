@@ -58,12 +58,20 @@ def get_response(model, tokenizer, message):
     inputs = tokenizer.apply_chat_template(
         message,
         tokenize=True,
-        add_generation_prompt=False,  # Must add for generation
+        add_generation_prompt=True,  # Must add for generation
         return_tensors="pt",
     ).to("cuda")
 
     outputs = model.generate(
-        input_ids=inputs, max_new_tokens=100, use_cache=True, temperature=1.5, min_p=0.1
+        input_ids=inputs,
+        max_new_tokens=256,
+        use_cache=True,
+        temperature=0.01,
+        min_p=0.1,
     )
 
-    return tokenizer.batch_decode(outputs)[0]
+    outputs = outputs[:, inputs.shape[1] :]
+    response = tokenizer.batch_decode(outputs)[0]
+    response = response.replace(tokenizer.eos_token, "")
+
+    return response

@@ -1,12 +1,10 @@
+import time
+from tqdm import tqdm
 from datasets import load_dataset
 from unsloth import FastLanguageModel
-from models.generator import model_generator
-
-from tqdm import tqdm
-from unsloth.chat_templates import get_chat_template
 
 from utils.formatter import *
-
+from models.generator import model_generator
 
 baselines = [
     "unsloth/Meta-Llama-3.1-8B",
@@ -17,38 +15,45 @@ baselines = [
 # load data
 ds = load_dataset("openai/gsm8k", "main")
 samples = ds["train"]
-test_data = ds["test"]
+test_dataset = ds["test"]
+test_data = test_dataset.take(10)
 
 # test accuracy for different models
 acc_data = []
 
 for model_name in baselines:
-    if model_name == "lora_model":
+    print(f"Testing {model_name}")
+    start_time = time.perf_counter()
+    if "lora_model" in model_name:
         model, tokenizer = model_generator(model_name, 2048, True)
     else:
         model, tokenizer = model_generator(model_name)
-        
-    tokenizer = get_chat_template(
-        tokenizer,
-        chat_template = "llama-3.1",
-    )
-    FastLanguageModel.for_inference(model) # Enable native 2x faster inference
+
+    FastLanguageModel.for_inference(model)  # Enable native 2x faster inference
 
     total = correct = 0
-    for item in tqdm(test_data[:100]):
-        messages = nshot_chats(
-            nshot_data=samples, n=8, question=item["question"]
-        )
-        response = get_response(messages)
+    for item in tqdm(test_data):
+        messages = nshot_chats(nshot_data=samples, n=8, question=item["question"])
+        response = get_response(model, tokenizer, messages)
+        print("============== QUESTION ==============")
+        print(item["question"])
+        print("============== ANSWER ==============")
+        print(item["answer"])
+        print("============== RESPONSE ==============")
+        print(response)
 
         pred_ans = extract_ans_from_response(response)
         true_ans = extract_ans_from_response(item["answer"])
+
+        print("============== EXTRACT_ANS ==============")
+        print(f"pred_ans: {pred_ans}")
+        print(f"true_ans: {true_ans}")
 
         total += 1
         if pred_ans == true_ans:
             correct += 1
 
     accuracy = f"{correct/total:.3f}"
-    acc_data.append(model_name, accuracy)
+    acc_data.append([model_name, accuracy])
     print(f"Total Accuracy: {accuracy}")
-    
+    print(f"Duration: {time.perf_counter() - start_time}")
