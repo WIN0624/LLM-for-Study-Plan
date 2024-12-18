@@ -17,11 +17,20 @@ def formatting_prompts_func(example, tokenizer):
         "text": texts,
     }
 
+def nshot_chats_batch(batch, nshot_data, n):
+    messages = []
+    for question in batch['question']:
+        message = nshot_chats(nshot_data, n, question)
+        messages.append(message)
+    
+    return {
+        'messages': messages
+    }
 
 def nshot_chats(nshot_data, n: int, question: str):
     chats = []
 
-    shuffled_dataset = nshot_data.shuffle(seed=42)
+    shuffled_dataset = nshot_data.shuffle()
 
     for i in range(n):
         qna = shuffled_dataset[i]
@@ -53,17 +62,24 @@ def extract_ans_from_response(answer: str, eos=None):
     except ValueError:
         return answer
 
-
-def get_response(model, tokenizer, message):
+    
+def get_response(model, tokenizer, message, batched=False):
     inputs = tokenizer.apply_chat_template(
         message,
         tokenize=True,
-        add_generation_prompt=False,  # Must add for generation
+        padding=True,
+        add_generation_prompt=True,  # Must add for generation
         return_tensors="pt",
     ).to("cuda")
 
     outputs = model.generate(
-        input_ids=inputs, max_new_tokens=100, use_cache=True, temperature=1.5, min_p=0.1
+        input_ids=inputs, max_new_tokens=256, use_cache=True, temperature=0.01, min_p=0.1
     )
 
-    return tokenizer.batch_decode(outputs)[0]
+    outputs = outputs[:, inputs.shape[1]:]
+    if not batched:
+      response = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+    else:
+      response = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+
+    return response

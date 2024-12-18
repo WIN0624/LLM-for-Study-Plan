@@ -3,6 +3,7 @@ import os
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 from unsloth import FastLanguageModel
+from unsloth.chat_templates import get_chat_template
 
 dtype = (
     None  # None for auto detection. Float16 for Tesla T4, V100, Bfloat16 for Ampere+
@@ -27,6 +28,12 @@ def model_generator(model_name, max_seq_length=2048, is_load=False):
             token=HF_TOKEN,  # use one if using gated models like meta-llama/Llama-2-7b-hf
         )
 
+        if "llama" in model_name:
+            tokenizer = get_chat_template(
+                tokenizer,
+                chat_template="llama-3.1",
+            )
+
         model = FastLanguageModel.get_peft_model(
             model,
             r=16,  # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
@@ -49,4 +56,4 @@ def model_generator(model_name, max_seq_length=2048, is_load=False):
             loftq_config=None,  # And LoftQ
         )
 
-        return model, tokenizer
+    return model, tokenizer
