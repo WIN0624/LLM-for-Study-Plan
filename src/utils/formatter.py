@@ -25,6 +25,16 @@ def formatting_prompts_func(example, tokenizer):
         "text": texts,
     }
 
+def nshot_chats_batch(batch, nshot_data, n):
+    messages = []
+    for question in batch['question']:
+        message = nshot_chats(nshot_data, n, question)
+        messages.append(message)
+    
+    return {
+        'messages': messages
+    }
+
 
 def nshot_chats(nshot_data, n: int, question: str):
     chats = []
@@ -52,27 +62,10 @@ def nshot_chats(nshot_data, n: int, question: str):
 
 
 def extract_ans_from_response(answer: str, eos=None, model=None, tokenizer=None):
-    # if eos:
-    #     answer = answer.split(eos)[0].strip()
-    #
-    # answer = answer.split("####")[-1].strip()
-    #
-    # for remove_char in [",", "$", "%", "g"]:
-    #     answer = answer.replace(remove_char, "")
-    #
-    # try:
-    #     return int(answer)
-    # except ValueError:
-    #     return answer
-
     answer_parsed = re.search(r"####[\s]?(\d+)", answer)
 
     if answer_parsed:
         return int(answer_parsed.group(1))
-
-    # failed to extract with regex, try fallback (llm method)
-    if model and tokenizer:
-        return extract_ans_from_response_fallback(answer, model, tokenizer)
 
     # failed to get answer
     return None
@@ -110,27 +103,24 @@ def get_response(model, tokenizer, message, full=False, generation=False):
     inputs = tokenizer.apply_chat_template(
         message,
         tokenize=True,
+        padding=True,
         add_generation_prompt=generation,
         return_tensors="pt",
     ).to("cuda")
 
-    attention_mask = torch.ones_like(inputs)
+    # attention_mask = torch.ones_like(inputs)
 
     outputs = model.generate(
         input_ids=inputs,
-        attention_mask=attention_mask,
-        max_new_tokens=512,
+        # attention_mask=attention_mask,
+        max_new_tokens=1024,
         use_cache=True,
-        temperature=1.5,
-        min_p=0.0,
+        temperature=0.01,
+        min_p=0.1,
         pad_token_id=tokenizer.eos_token_id,
     )
 
     generated_tokens = outputs[:, len(inputs[0]) :]
-
-    # print(outputs)
-    # print(generated_tokens)
-    # exit(0)
 
     if full:
         return tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
