@@ -6,10 +6,12 @@ from tqdm import tqdm
 from unsloth.chat_templates import get_chat_template
 
 from utils.formatter import *
+from torch.utils.data import DataLoader
 
 
 baselines = [
-    "./lora_model",
+    "./lora_model_steps2000_lr2e-04",
+    "./lora_model_steps7000_lr2e-04",
     "unsloth/Meta-Llama-3.1-8B",
     "unsloth/Llama-3.2-3B-Instruct",
     "unsloth/Llama-3.2-1B-Instruct",
