@@ -61,5 +61,5 @@ trainer = train_on_responses_only(
 trainer_stats = trainer.train()  # 480 samples
 
 # save 
-# model.save_pretrained("lora_model")  # Local saving
-# tokenizer.save_pretrained("lora_model")
+model.save_pretrained("lora_model")  # Local saving
+tokenizer.save_pretrained("lora_model")
