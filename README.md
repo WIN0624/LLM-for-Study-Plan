@@ -4,42 +4,259 @@ This tutorial are **beginner friendly**! This repository aims to help users cust
 
 With this rubric you can advance your works or even merge it into your promts to guide LLM-based labeling for your dataset.
 
-<img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412181558724.png" alt="image-20241218155844694" style="zoom:85%;" />
+<img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412181558724.png" alt="image-20241218155844694" style="zoom:80%;" />
 
 **【Quick Navigation】**
 
-* Without a domain-specific dataset, start with the **`METRICS DEFINITION`** section
+* Without a domain-specific dataset, start with the [METRICS Customization](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#metrics-customization) section
 
-* With a domain-specific datasets, start with the **`Finetuning`** section
-* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook] for quick start
+  > Use default LLM model `unsloth/Llama-3.2-3B-Instruct`
+
+* With a domain-specific datasets, start with the [Finetuning](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#domain-specific-llm-finetuning) section
+
+* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp#scrollTo=kb0j7bRNS7Fu) for quick start
 
 ## ⭐ Key Features
 
 * Supports 4bit and 16bit QLoRA / LoRA finetuning via [Unsloth](https://github.com/unslothai/unsloth) 
 * Introduces prompting techniques to customize evaluation metrics for generalized real-world problems
 * Plug-and-Play prompt framework
-* On-Device deployment with an interface for exporting models and saving to GGFU
+* On-Device deployment using Unsloth to export models and save to GGFU
 * Reusable evaluation metrics for generating and evaluating personlized educational resources
 
 ## 💾 Installation Instructions
 
 ### Requirements Installation
 
+```shell
+pip install -r requirements.txt
+```
+
 ### Domain-specific LLM Finetuning
+
+* step1. Finetune `Llama-3.2-3B-Instruct` model with gsm8k math dataset
+
+ ```shell
+ python3 src/train.py
+ ```
+
+* step2. Compare finetuned model accuracy with base model through `Chain-of-Thought` and `2-shot` prompt techniques.
+
+```shell
+python3 src/train.py
+```
 
 ### Metrics Customization
 
+<img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412181641605.png" alt="image-20241218164122583" style="zoom:80%;" />
 
+* <font color='blue'>**DEFINE YOUR PROMPTS FOLLOWING [TODO] in `src/generate/prompts.py`**</font>
+
+* **<u>Phase1. Initialize evaluation dimensions</u>**
+
+  In this step, you need to revise predefined task prompt and evaluation prompt in **`src/generate/prompts.py`** to suit you own task. 
+
+  **Note:**  <font color='red'>the system prompt must remain unchanged</font> and should stay consistent across different tasks.
+
+  * **step1. Define intial evaluation dimensions**
+
+    Using the predefined prompts, you can adapt them for you task and list 2 to 3 initial evaluation dimensions in the format like `Keyword Adjectives. Detailed explanation.`
+
+    ```python
+    system_prompt = (
+        "\n\n"
+        + "If there are specific requirements or constraints, you should satisfy the requests in your response"
+    )
+    
+    student_task_system_prompt = (
+        "You are an expert in math education. "
+        + "You should provide clear, descriptive, and helpful answers and explanations to the student's questions."
+        + "The student may also ask or provide additional specific information that you should take into account when assisting them."
+        "\n\n"
+        + "You are helping a student with questions about the direction of their studies. "
+        + "You will help the student generate a study plan for their course. "
+    )
+    
+    student_evaluation_system_prompt = (
+        "\n\n"
+        + "Consider the following dimensions when generating the study plan: \n"
+        + "1. Be Detailed: Provide a detailed plan that includes the topics and concepts they should focus on, in a clear and organized manner.\n"
+        + "2. Be Hierarchical: Create a hierarchical study plan, grouping similar topics and concepts together."
+    )
+    
+    initial_student_prompts = {
+        "task_prompt": student_task_system_prompt,
+        "evaluation_prompt": student_evaluation_system_prompt,
+    }
+    ```
+
+  * **step2. Generate initial LLM responses under two version prompts**
+
+    In `src/generate/initial_generate.py`, replace the `task_eval_prompt` and `user_prompt`with your defined task prompt and user_input
+    
+    ```python
+    MODEL_NAME = "unsloth/Llama-3.2-3B-Instruct"
+    model, tokenizer = model_generator(MODEL_NAME)
+    FastLanguageModel.for_inference(model)
+        
+        
+    def initial_generate(task_eval_prompt, user_prompt):    
+        prompts = {
+            "RAW_SYSTEM_PROMPT": (
+                task_eval_prompt["task_prompt"]
+                + system_prompt
+                + task_eval_prompt["evaluation_prompt"]
+            ),
+            "PARTIAL_PROMPT": (task_eval_prompt["task_prompt"] + system_prompt),
+        }
+        
+        for prompt_name, prompt in prompts.items():
+            input_chat = [
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_prompt},
+            ]
+            print(f"============== RESPONSE FOR {prompt_name} ==============")
+            print(get_response(model, tokenizer, input_chat, generation=True))
+            print("============== /RESPONSE ==============")
+    
+    
+    if __name__ == '__main__':
+        # [CHANG HERE]
+        task_eval_promt = initial_student_prompts	
+        user_prompt = "Can you generate a study plan for me? I am taking Calculus 1 this semester and struggling with integration, particularly u-substitution."
+        initial_generate(initial_student_prompts, user_prompt)
+    ```
+
+* <u>**Phase2. Refine evaluation dimensions**</u>
+
+  Take `ChatGPT` as an expert on your domain-specific task.
+
+  * **step1. Get EXTRA EVALUATION DIMENSIONS considerations with compare and reasoning prompts**
+
+    First, change the compare_prompt in `src/generate/prompts.py` to fit your task. Then, fill in  `raw_output` and `output_with_evaluations` generated in Phase1 under `src/generate/expert_generate.py`.
+
+  ```python
+  compare_prompt = (
+      "The following texts are two different sample study plans to be used by students to further their studies."
+      + "Compare the following study plans and provide feedback on which one is more effective. "
+      + "Provide an explanation of your decision and define the 2-3 most important metrics you used to arrive at your conclusion."
+  )
+  
+  response_pair = f"Response 1:\n{raw_output}\n\n\nResponse 2:\n{output_with_evaluations}"
+  
+  resp = openai_client.chat.completions.create(
+      model="gpt-4o",
+      messages=[
+          {"role": "system", "content": compare_prompt},
+          {"role": "user", "content": response_pair},
+      ],
+  )
+  print("============== EXTRA_EVALUATION  ==============")
+  print(resp)
+  print("============== /EXTRA_EVALUATION ==============")
+  ```
+
+  * **step2. Get ADVICES on the initially listed evaluation dimensions**
+
+    In  `src/generate/expert_generate.py`, switch the task_eval_prompt to your initial task_prompt with initial evaluations.
+
+  ```python
+  resp = openai_client.chat.completions.create(
+          model="gpt-4o",
+          messages=[
+              {"role": "system", "content": advice_prompt},
+              {"role": "user", "content": task_eval_prompt["evaluation_prompt"]},
+          ],
+      )
+  print("============== ADVICE_ON_INITIAL_PROMPT  ==============")
+  print(resp)
+  print("============== /ADVICE_ON_INITIAL_PROMPT ==============")
+  ```
+
+* <u>**Phase3. Finalize evaluation dimensions, task prompts**</u>
+
+  * **step1. Finalized evaluations and task prompts**
+
+    Selectively merge the information provided by ChatGPT in Phase 2 and finalize the evaluation dimensions for your task. 
+
+    Use `src/generate/generate.py` to generate the final output.
+
+  ```python
+  finalized_student_evaluation_system_prompt = (
+      "\n\n"
+      + "Consider the following dimensions when generating the study plan: \n"
+      + "1. Be Detailed and Actionable: Provide a detailed plan with specific topics and concepts they should focus on, and include actionable strategies.\n"
+      + "2. Be Hierarchical: Create a hierarchical study plan, grouping similar topics and concepts together.\n"
+      + "3. Be Adaptable: Allow flexibility for students to personalize the plan based on their progress, time constraints, or focus areas.\n"
+  )
+  
+  finalized_student_prompts = {
+      "task_prompt": student_task_system_prompt,
+      "evaluation_prompt": finalized_student_evaluation_system_prompt,
+  }
+  ```
+
+  * <u>**step2. Customize scoring prompts for your task**</u>
+
+    Define the scoring task using finalized evaluation dimensions. Here, we use a zero-shot prompt, simplifying the scoring task to three levels: -1, 0, and 1, corresponding to poor, neutral, and good. If you want make it more complex with a 5-level scoring system (1 to 5), we strongly recommend using a few-shot prompt to achieve better results.
+
+    Use `src/generate/generate.py` to score the final output.
+
+  ```python
+  score_prompt = (
+      "You are a labeller and response evaluator. Please evaluate the following question and response pair. "
+      + "Provide a set of scores based on the quality of the response and how well it fulfills each of the criteria, "
+      + "with -1 indicating that the response does not meet the requirement, 0 being neutral, and 1 meaning the response effectively meets the required criterion. "
+      + "Here are the criteria to consider when evaluating the response, please provide a score for each critereon based on how well the response meets the requirement, "
+      + "and a brief explanation as to why each score was chosen: \n"
+      + "1. Be Detailed and Actionable: Provide a detailed plan with specific topics and concepts they should focus on, and include actionable strategies.\n"
+      + "2. Be Hierarchical: Create a hierarchical study plan, grouping similar topics and concepts together.\n"
+      + "3. Be Adaptable: Allow flexibility for students to personalize the plan based on their progress, time constraints, or focus areas.\n"
+  )
+  
+  inference_qa_pair = f"Question:\n{user_prompt}\n\nAnswer:\n{response}"
+  
+  messages = [
+      {"role": "system", "content": score_prompt},
+      {"role": "user", "content": inference_qa_pair},
+  ]
+  ```
 
 ## 🔗 Links and Resources
 
-| Type                                  | Links                                                        |
-| :------------------------------------ | :----------------------------------------------------------- |
-| 📚 **Documentation**                   | [Read Our Docs](https://docs.unsloth.ai/)                    |
-| 💾 **Installation**                    | [unsloth/README.md](https://github.com/unslothai/unsloth/tree/main#-installation-instructions) |
-| 🥇 **Experiment Results**              | [Performance Tables](https://github.com/unslothai/unsloth/tree/main#-performance-benchmarking) |
-| 🌐 Tutorial on Personalized Study Plan |                                                              |
-
-
+| Type                                      | Links                                                        |
+| :---------------------------------------- | :----------------------------------------------------------- |
+| 📚 **Documentation**                       | [Read Our Docs](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#-integrated-framework-with-customized-llms-metrics) |
+| 💾 **Installation**                        | [README.md](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#-installation-instructions) |
+| 🥇 **Experiment Results**                  | [Performance Tables](https://github.com/unslothai/unsloth/tree/main#-performance-benchmarking) |
+| 🌐 **Tutorial on Personalized Study Plan** | [Start](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp#scrollTo=kb0j7bRNS7Fu) |
 
 ## 🥇 Experiment Results
+
+* **<u>Result of Phase 1</u>**
+
+  Two generated initial study plans using `raw_systemt_prompt` and `partial_system_prompt`. The one on the right incorporates the initially listed evaluation dimensions.
+
+<img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191119868.png" alt="image-20241219111911833" style="zoom:80%;" />
+
+* **<u>Result of Phase2</u>**
+
+  Extra evaluation dimensions provided by ChatGPT
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191213472.png" alt="image-20241219121352434" style="zoom:70%;" />
+
+  Advices on initial evaluations from ChatGPT
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191214334.png" alt="image-20241219121430293" style="zoom:70%;" />
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191215059.png" alt="image-20241219121556036" style="zoom:70%;" />
+
+* **Result of Phase3**
+
+  Study plan with finalized evaluation metrics
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191216533.png" alt="image-20241219121611490" style="zoom:70%;" />
+
+  Scores for each evaluation dimension
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191216803.png" alt="image-20241219121623767" style="zoom:60%;" />
