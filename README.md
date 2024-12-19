@@ -50,9 +50,11 @@ python3 src/train.py
 
 <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412181641605.png" alt="image-20241218164122583" style="zoom:80%;" />
 
+* <font color='blue'>**DEFINE YOUR PROMPTS FOLLOWING [TODO] in `src/generate/prompts.py`**</font>
+
 * **<u>Phase1. Initialize evaluation dimensions</u>**
 
-  In this step, you need to revise predefined task prompt and evaluation prompt in **`prompts.py`** to suit you own task. 
+  In this step, you need to revise predefined task prompt and evaluation prompt in **`src/generate/prompts.py`** to suit you own task. 
 
   **Note:**  <font color='red'>the system prompt must remain unchanged</font> and should stay consistent across different tasks.
 
@@ -82,7 +84,7 @@ python3 src/train.py
         + "2. Be Hierarchical: Create a hierarchical study plan, grouping similar topics and concepts together."
     )
     
-    student_prompts = {
+    initial_student_prompts = {
         "task_prompt": student_task_system_prompt,
         "evaluation_prompt": student_evaluation_system_prompt,
     }
@@ -90,37 +92,48 @@ python3 src/train.py
 
   * **step2. Generate initial LLM responses under two version prompts**
 
+    In `src/generate/initial_generate.py`, replace the `task_eval_prompt` and `user_prompt`with your defined task prompt and user_input
+    
     ```python
-    selected_prompts = student_prompts
-    
-    raw_system_prompt = (
-        selected_prompts["task_prompt"]
-        + system_prompt
-        + selected_prompts["evaluation_prompt"]
-    )
-    partial_system_prompt = selected_prompts["task_prompt"] + system_prompt
-    
-    # load model for inference
-    model, tokenizer = model_generator(model_name)
-    tokenizer = get_chat_template(
-        tokenizer,
-        # chat_template="llama-3.1",
-    )
-    
+    MODEL_NAME = "unsloth/Llama-3.2-3B-Instruct"
+    model, tokenizer = model_generator(MODEL_NAME)
     FastLanguageModel.for_inference(model)
+        
+        
+    def initial_generate(task_eval_prompt, user_prompt):    
+        prompts = {
+            "RAW_SYSTEM_PROMPT": (
+                task_eval_prompt["task_prompt"]
+                + system_prompt
+                + task_eval_prompt["evaluation_prompt"]
+            ),
+            "PARTIAL_PROMPT": (task_eval_prompt["task_prompt"] + system_prompt),
+        }
+        
+        for prompt_name, prompt in prompts.items():
+            input_chat = [
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_prompt},
+            ]
+            print(f"============== RESPONSE FOR {prompt_name} ==============")
+            print(get_response(model, tokenizer, input_chat, generation=True))
+            print("============== /RESPONSE ==============")
     
-    # get inference response
-    for prompt in [raw_system_prompt, partial_system_prompt]:
-        print("============== RESPONSE  ==============")
-    	print(get_response(model, tokenizer, input_chat, generation=True))
-    	print("============== /RESPONSE ==============")
+    
+    if __name__ == '__main__':
+        # [CHANG HERE]
+        task_eval_promt = initial_student_prompts	
+        user_prompt = "Can you generate a study plan for me? I am taking Calculus 1 this semester and struggling with integration, particularly u-substitution."
+        initial_generate(initial_student_prompts, user_prompt)
     ```
 
 * <u>**Phase2. Refine evaluation dimensions**</u>
 
   Take `ChatGPT` as an expert on your domain-specific task.
 
-  * **step1. Get EXTRA EVALUATION DIMENSIONS considerations with compare and reasoning prompts in `prompts.py`**
+  * **step1. Get EXTRA EVALUATION DIMENSIONS considerations with compare and reasoning prompts**
+
+    First, change the compare_prompt in `src/generate/prompts.py` to fit your task. Then, fill in  `raw_output` and `output_with_evaluations` generated in Phase1 under `src/generate/expert_generate.py`.
 
   ```python
   compare_prompt = (
@@ -129,22 +142,44 @@ python3 src/train.py
       + "Provide an explanation of your decision and define the 2-3 most important metrics you used to arrive at your conclusion."
   )
   
-  compare_input_promt = (
-      compare_prompt
-      + study_plan1
-      + study_plan2
+  response_pair = f"Response 1:\n{raw_output}\n\n\nResponse 2:\n{output_with_evaluations}"
+  
+  resp = openai_client.chat.completions.create(
+      model="gpt-4o",
+      messages=[
+          {"role": "system", "content": compare_prompt},
+          {"role": "user", "content": response_pair},
+      ],
   )
+  print("============== EXTRA_EVALUATION  ==============")
+  print(resp)
+  print("============== /EXTRA_EVALUATION ==============")
   ```
 
   * **step2. Get ADVICES on the initially listed evaluation dimensions**
 
+    In  `src/generate/expert_generate.py`, switch the task_eval_prompt to your initial task_prompt with initial evaluations.
+
   ```python
-  
+  resp = openai_client.chat.completions.create(
+          model="gpt-4o",
+          messages=[
+              {"role": "system", "content": advice_prompt},
+              {"role": "user", "content": task_eval_prompt["evaluation_prompt"]},
+          ],
+      )
+  print("============== ADVICE_ON_INITIAL_PROMPT  ==============")
+  print(resp)
+  print("============== /ADVICE_ON_INITIAL_PROMPT ==============")
   ```
 
-* <u>**step3. Finalize evaluation dimensions and score prompts**</u>
+* <u>**Phase3. Finalize evaluation dimensions, task prompts**</u>
 
-  Selectively merge the information provided by ChatGPT in Phase 2 and finalize the evaluation dimensions for your task.
+  * **step1. Finalized evaluations and task prompts**
+
+    Selectively merge the information provided by ChatGPT in Phase 2 and finalize the evaluation dimensions for your task. 
+
+    Use `src/generate/generate.py` to generate the final output.
 
   ```python
   finalized_student_evaluation_system_prompt = (
@@ -155,17 +190,37 @@ python3 src/train.py
       + "3. Be Adaptable: Allow flexibility for students to personalize the plan based on their progress, time constraints, or focus areas.\n"
   )
   
-  student_prompts = {
+  finalized_student_prompts = {
       "task_prompt": student_task_system_prompt,
       "evaluation_prompt": finalized_student_evaluation_system_prompt,
   }
-  
-  
   ```
 
-  
+  * <u>**step2. Customize scoring prompts for your task**</u>
 
-* <u>**step4. Customize score prompts for your task**</u>
+    Define the scoring task using finalized evaluation dimensions. Here, we use a zero-shot prompt, simplifying the scoring task to three levels: -1, 0, and 1, corresponding to poor, neutral, and good. If you want make it more complex with a 5-level scoring system (1 to 5), we strongly recommend using a few-shot prompt to achieve better results.
+
+    Use `src/generate/generate.py` to score the final output.
+
+  ```python
+  score_prompt = (
+      "You are a labeller and response evaluator. Please evaluate the following question and response pair. "
+      + "Provide a set of scores based on the quality of the response and how well it fulfills each of the criteria, "
+      + "with -1 indicating that the response does not meet the requirement, 0 being neutral, and 1 meaning the response effectively meets the required criterion. "
+      + "Here are the criteria to consider when evaluating the response, please provide a score for each critereon based on how well the response meets the requirement, "
+      + "and a brief explanation as to why each score was chosen: \n"
+      + "1. Be Detailed and Actionable: Provide a detailed plan with specific topics and concepts they should focus on, and include actionable strategies.\n"
+      + "2. Be Hierarchical: Create a hierarchical study plan, grouping similar topics and concepts together.\n"
+      + "3. Be Adaptable: Allow flexibility for students to personalize the plan based on their progress, time constraints, or focus areas.\n"
+  )
+  
+  inference_qa_pair = f"Question:\n{user_prompt}\n\nAnswer:\n{response}"
+  
+  messages = [
+      {"role": "system", "content": score_prompt},
+      {"role": "user", "content": inference_qa_pair},
+  ]
+  ```
 
 ## 🔗 Links and Resources
 
@@ -182,9 +237,26 @@ python3 src/train.py
 
   Two generated initial study plans using `raw_systemt_prompt` and `partial_system_prompt`. The one on the right incorporates the initially listed evaluation dimensions.
 
-![image-20241219111911833](https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191119868.png)
+<img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191119868.png" alt="image-20241219111911833" style="zoom:80%;" />
 
 * **<u>Result of Phase2</u>**
 
   Extra evaluation dimensions provided by ChatGPT
 
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191213472.png" alt="image-20241219121352434" style="zoom:70%;" />
+
+  Advices on initial evaluations from ChatGPT
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191214334.png" alt="image-20241219121430293" style="zoom:70%;" />
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191215059.png" alt="image-20241219121556036" style="zoom:70%;" />
+
+* **Result of Phase3**
+
+  Study plan with finalized evaluation metrics
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191216533.png" alt="image-20241219121611490" style="zoom:70%;" />
+
+  Scores for each evaluation dimension
+
+  <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412191216803.png" alt="image-20241219121623767" style="zoom:60%;" />
