@@ -38,7 +38,7 @@ for model_name in baselines:
         # chat_template="llama-3.1",
     )
 
-    FastLanguageModel.for_inference(model)  # Enable native 2x faster inference
+    FastLanguageModel.for_inference(model)
 
     total = correct = 0
     for item in tqdm(test_data):
