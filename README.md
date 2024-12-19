@@ -6,6 +6,10 @@ With this rubric you can advance your works or even merge it into your promts to
 
 <img src="https://cdn.jsdelivr.net/gh/WIN0624/Picgo@main/img/202412181558724.png" alt="image-20241218155844694" style="zoom:80%;" />
 
+**【Tutorial】**
+
+* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp) for quick start
+
 **【Quick Navigation】**
 
 * Without a domain-specific dataset, start with the [METRICS Customization](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#metrics-customization) section
@@ -13,8 +17,6 @@ With this rubric you can advance your works or even merge it into your promts to
   > Use default LLM model `unsloth/Llama-3.2-3B-Instruct`
 
 * With a domain-specific datasets, start with the [Finetuning](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#domain-specific-llm-finetuning) section
-
-* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp) for quick start
 
 ## ⭐ Key Features
 
