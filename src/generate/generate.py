@@ -34,7 +34,7 @@ def generate(task_eval_prompt, user_prompt):
     
     print(f"============== FINAL RESPONSE ==============")
     print(resp)
-    print("============== /RESPONSE ==============")
+    print("============== /FINAL RESPONSE= ==============\n\n")
     
     return resp
     
@@ -54,9 +54,9 @@ def score_response(user_prompt, resp, use_gpt=False):
     else:
         resp = get_response(model, tokenizer, messages, generation=True)
 
-    print(f"============== FINAL RESPONSE ==============")
+    print(f"============== SCORE ==============")
     print(resp)
-    print("============== /RESPONSE ==============")
+    print("============== /SCORE ==============")
 
     return resp
 

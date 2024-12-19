@@ -23,7 +23,7 @@ def compare_generate(raw_output, output_with_evaluations):
     )
     print("============== EXTRA_EVALUATION  ==============")
     print(resp)
-    print("============== /EXTRA_EVALUATION ==============")
+    print("============== /EXTRA_EVALUATION ==============\n\n")
 
 def advice_generate(task_eval_prompt):
     resp = openai_client.chat.completions.create(
