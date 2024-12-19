@@ -9,7 +9,7 @@ from unsloth.chat_templates import train_on_responses_only
 from models.generator import model_generator
 from utils.formatter import formatting_prompts_func
 
-max_steps = 7000
+max_steps = 2000
 learning_rate = 2e-4
 lora_model_name = f"lora_model_steps{max_steps}_lr{learning_rate:.0e}"
 
@@ -64,6 +64,6 @@ trainer = train_on_responses_only(
 
 trainer_stats = trainer.train()
 
-
+# save
 model.save_pretrained(lora_model_name)
 tokenizer.save_pretrained(lora_model_name)

@@ -35,11 +35,10 @@ def nshot_chats_batch(batch, nshot_data, n):
         'messages': messages
     }
 
-
 def nshot_chats(nshot_data, n: int, question: str):
     chats = []
 
-    shuffled_dataset = nshot_data.shuffle(seed=42)
+    shuffled_dataset = nshot_data.shuffle()
 
     chats.append(
         {
@@ -104,15 +103,13 @@ def get_response(model, tokenizer, message, full=False, generation=False):
         message,
         tokenize=True,
         padding=True,
-        add_generation_prompt=generation,
+        add_generation_prompt=True,
         return_tensors="pt",
     ).to("cuda")
 
-    # attention_mask = torch.ones_like(inputs)
 
     outputs = model.generate(
         input_ids=inputs,
-        # attention_mask=attention_mask,
         max_new_tokens=1024,
         use_cache=True,
         temperature=0.01,
