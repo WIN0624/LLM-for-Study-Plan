@@ -28,7 +28,7 @@ def initial_generate(task_eval_prompt, user_prompt):
         ]
         print(f"============== RESPONSE FOR {prompt_name} ==============")
         print(get_response(model, tokenizer, input_chat, generation=True))
-        print("============== /RESPONSE ==============")
+        print("============== /RESPONSE ==============\n\n")
 
 
 if __name__ == '__main__':
