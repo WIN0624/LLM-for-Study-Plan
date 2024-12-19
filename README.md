@@ -43,7 +43,7 @@ pip install -r requirements.txt
 * step2. Compare finetuned model accuracy with base model through `Chain-of-Thought` and `2-shot` prompt techniques.
 
 ```shell
-python3 src/train.py
+python3 src/test.py
 ```
 
 ### Metrics Customization
