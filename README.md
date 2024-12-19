@@ -124,9 +124,9 @@ python3 src/test.py
     
     if __name__ == '__main__':
         # [CHANG HERE]
-        task_eval_promt = initial_student_prompts	
+        task_eval_prompt = initial_student_prompts	
         user_prompt = "Can you generate a study plan for me? I am taking Calculus 1 this semester and struggling with integration, particularly u-substitution."
-        initial_generate(initial_student_prompts, user_prompt)
+        initial_generate(task_eval_prompt, user_prompt)
     ```
 
 * <u>**Phase2. Refine evaluation dimensions**</u>
