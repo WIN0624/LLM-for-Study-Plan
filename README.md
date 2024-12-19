@@ -8,7 +8,7 @@ With this rubric you can advance your works or even merge it into your promts to
 
 **【Tutorial】**
 
-* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp) for quick start
+* Check out this [Tutorial for Customizing Personalized Learning Plan Evaluation Metrics Notebook](https://colab.research.google.com/drive/1xGaGEkKZu3OlBkTFSK4gdYEVsXWMXysH?usp=drive_link) for quick start
 
 **【Quick Navigation】**
 
@@ -231,7 +231,7 @@ python3 src/test.py
 | 📚 **Documentation**                       | [Read Our Docs](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#-integrated-framework-with-customized-llms-metrics) |
 | 💾 **Installation**                        | [README.md](https://github.com/WIN0624/LLM-for-Study-Plan?tab=readme-ov-file#-installation-instructions) |
 | 🥇 **Experiment Results**                  | [Performance Tables](https://github.com/unslothai/unsloth/tree/main#-performance-benchmarking) |
-| 🌐 **Tutorial on Personalized Study Plan** | [Start](https://colab.research.google.com/drive/1O3_W9AA934mk9ia96abYCZvJqIzI9IDp) |
+| 🌐 **Tutorial on Personalized Study Plan** | [Start](https://colab.research.google.com/drive/1xGaGEkKZu3OlBkTFSK4gdYEVsXWMXysH?usp=drive_link) |
 
 ## 🥇 Experiment Results
 
