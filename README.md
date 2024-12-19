@@ -90,7 +90,7 @@ python3 src/test.py
     }
     ```
 
-  * **step2. Generate initial LLM responses under two version prompts**
+  * **step2. Generate initial LLM responses using two version prompts**
 
     In `src/generate/initial_generate.py`, replace the `task_eval_prompt` and `user_prompt`with your defined task prompt and user_input
     
